@@ -1,2 +1,2 @@
 # PIESpaceRider
-Repetory for the SpaceRider PIE 2020/2021
+Repository for the SpaceRider PIE 2020/2021
