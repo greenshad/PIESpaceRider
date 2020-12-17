@@ -33,6 +33,7 @@ end
 satCornerFramePos(size(sat.crnPos,1)+1,:) = satCornerFramePos(1,:);
 plot(fig.fig.Children(2),satCornerFramePos(:,1), satCornerFramePos(:,2))
 
+% plot landmarks positions
 for i=1:sat.lmkN
     satLandmarkFramePos = cam.getPointPosInFrame(sat.lmkPos(i,:));
     plot(fig.fig.Children(2),satLandmarkFramePos(1), satLandmarkFramePos(2),'.')

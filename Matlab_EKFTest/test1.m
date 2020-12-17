@@ -4,7 +4,7 @@ clear
 lmkN = 10;
 
 cam = camera();
-sat = satellite(lmkN);
+sat = satellite();
 fig = initGraphics(sat,cam);
 
 % for i=1:100
