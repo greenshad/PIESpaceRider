@@ -1,11 +1,13 @@
 close all
 clear
 
-lmkN = 10;
+lmkN = 5;
 
 cam = camera();
-sat = satellite();
-fig = initGraphics(sat,cam);
+sat = satellite(lmkN);
+mes = measurement();
+fig = initGraphics(sat,cam,mes);
+
 
 % for i=1:100
 %     cam.translateCam([0,0.1,0]);
@@ -39,9 +41,10 @@ fig = initGraphics(sat,cam);
 %     draw(sat,cam,fig)
 % end 
 
+mes.setVariance(0.01,0.01,0.01)
 sat.setSatPos([0,10,0]);
 sat.setSatAngle(0);
-draw(sat,cam,fig)
+draw(sat,cam,fig,mes)
 
 
 for i=1:400
@@ -49,5 +52,7 @@ for i=1:400
     sat.setSatAngle(3.14/3*sin(i/50));
     cam.setCamPos([0.5*sin(i/20), 1*sin(i/30), 0]);
     cam.setCamAngle(3.14/25*sin(i/10));
-    draw(sat,cam,fig)
+    mes.getMeasurements(sat,cam)
+    draw(sat,cam,fig,mes)
+    %pause(0.1)
 end 

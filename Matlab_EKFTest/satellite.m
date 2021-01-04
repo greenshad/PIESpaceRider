@@ -15,8 +15,8 @@ classdef satellite < handle
     end
     methods
         % constructor
-        function obj = satellite()
-            obj.lmkN = 5;                    % uses 5 landmarks by default
+        function obj = satellite(lmkN)
+            obj.lmkN = lmkN;                    % uses 5 landmarks by default
             obj.satPos = [0,10,0];           % x,y,z position of the center
             obj.satTheta = 0;                % the = rotation around z axis
             obj.satSpeed = [0,0,0];

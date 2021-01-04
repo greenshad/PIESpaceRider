@@ -1,0 +1,53 @@
+% Measurement class, used to create measurements with a certain level of
+% noise from the camera frame.
+classdef measurement < handle
+    properties
+        measSatPos
+        %measSatTheta
+        %MeasSatFramePos
+        %measCrnRelPos
+        measCrnPos
+        %measLmkRelPos
+        measLmkPos
+        %measLmkN
+        %measSatSpeed
+        %measSatOmega
+        simVarSat
+        simVarCrn
+        simVarLmk
+    end
+    methods
+        
+         % constructor
+        function obj = measurement()
+            obj.measSatPos = [0,0];          %  no measurements taken
+            obj.measCrnPos = [0,0];
+            obj.measLmkPos = [0,0];
+            obj.simVarSat = 0;               %  standard variance is zero
+            obj.simVarCrn = 0;
+            obj.simVarLmk = 0;
+            
+        end
+        
+        function obj = getMeasurements(obj,sat,cam)
+            % measure Sat center
+            obj.measSatPos = cam.getPointPosInFrame(sat.satPos);
+
+            % measure Sat sides
+            satCornerFramePos = zeros(size(sat.crnPos,1),2);
+            for i=1:size(sat.crnPos,1)
+                satCornerFramePos(i,:) = cam.getPointPosInFrame(sat.crnPos(i,:));
+            end
+            obj.measCrnPos = satCornerFramePos;
+
+            % measure landmark positions
+            satLandmarkFramePos = zeros(size(sat.lmkN,1),2);
+            for i=1:sat.lmkN
+                satLandmarkFramePos(i,:) = cam.getPointPosInFrame(sat.lmkPos(i,:));
+            end
+            obj.measLmkPos = satLandmarkFramePos;
+            
+        end
+    end
+    
+end
