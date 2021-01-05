@@ -90,5 +90,6 @@ classdef camera < handle
                 framePos = [NaN, NaN];
             end
         end
+        
     end
 end
