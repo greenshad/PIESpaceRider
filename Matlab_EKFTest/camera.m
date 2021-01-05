@@ -1,5 +1,5 @@
 % create the camera object. It can move in 3d but can only rotate around
-% the z axis. Its field of viex can be changed.
+% the z axis. Its field of view can be modified
 classdef camera < handle
     properties
         camPos
@@ -74,7 +74,7 @@ classdef camera < handle
             obj.camOmega = omega;
         end
         
-        function obj = updateCameraPos(obj, dt)
+        function obj = updateCamPos(obj, dt)
             obj.rotateCam(obj.camOmega*dt/2);
             obj.translateCam(obj.camSpeed*dt);
             obj.rotateCam(obj.camOmega*dt/2);
