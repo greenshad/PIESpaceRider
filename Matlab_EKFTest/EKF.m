@@ -51,9 +51,9 @@ classdef EKF < handle
             Q = obj.ekfQ;
             R = obj.ekfR;
             
-            map = [sat.lmkRelPos]';
+            map = [[0,0,0] ; sat.lmkRelPos]';               %add the center of the satellite as a lmk
             u = [sat.satSpeed - cam.camSpeed, sat.satOmega - cam.camOmega];
-            z = mes.measLmkPos';
+            z = [mes.measSatPos; mes.measLmkPos]';
             
             %PREDICTION
             X = obj.f(X,u,dt);
@@ -63,6 +63,8 @@ classdef EKF < handle
             
             %CORRECTION
             
+            
+            % correction using landmarks position
             for i=1:size(z,2)
                 zi = z(:,i);
                 mi = map(:,i);
@@ -74,14 +76,16 @@ classdef EKF < handle
                 X = X + K*y;
                 Pn1 = (eye(size(Pn1))-K*H)*Pn1;
             end
+            
+            %UPDATE
             obj.ekfX = X;
             obj.ekfP = Pn1;
             end
         
         function X_est = f(obj,X,u,dt)
             X_est = X;
-            X_est(1) = X_est(1) + u(1)*dt*cos(u(4)*dt/2);
-            X_est(2) = X_est(2) + u(2)*dt*sin(u(4)*dt/2);
+            X_est(1) = X_est(1) + u(1)*dt*cos(u(4)*dt/2) - u(2)*dt*sin(u(4)*dt/2);
+            X_est(2) = X_est(2) + u(2)*dt*cos(u(4)*dt/2) + u(1)*dt*sin(u(4)*dt/2);
             X_est(3) = X_est(3) + u(3)*dt;
             X_est(4) = X_est(4) + u(4)*dt;
         end
@@ -89,9 +93,9 @@ classdef EKF < handle
         function F = computeF(obj,X,u,dt)
            F = zeros(size(X,1));
            F(1,1) = 1;
-           F(1,4) = -u(1)*dt*sin(u(4)*dt/2);
+           F(1,4) = -u(1)*dt*sin(u(4)*dt/2) - u(2)*dt*cos(u(4)*dt/2);
            F(2,2) = 1;
-           F(2,4) = u(2)*dt*cos(u(4)*dt/2);
+           F(2,4) = -u(2)*dt*sin(u(4)*dt/2) + u(1)*dt*cos(u(4)*dt/2);
            F(3,3) = 1;
            F(4,4) = 1;
         end
@@ -106,8 +110,12 @@ classdef EKF < handle
             t = X(4);
             zi_est = zeros(2,1);
             
-            zi_est(1) = 2/fov * atan((x*cos(t) - y*sin(t) + u)/(z+w));
-            zi_est(2) = 2/fov * atan((x*sin(t) + y*cos(t) + v)/(z+w));
+            xrel = x*cos(t) - y*sin(t) + u;
+            yrel = x*sin(t) + y*cos(t) + v;
+            zrel = z+w;
+            
+            zi_est(1) = 2/fov * atan(xrel/yrel);
+            zi_est(2) = 2/fov * atan(zrel/yrel);
         end
         
         function H = computeH(obj,X,mi,fov)
@@ -120,13 +128,14 @@ classdef EKF < handle
             t = X(4);
             H = zeros(2,size(X,1));
             
-            H(1,1) = 2/fov * (w+z) / (u*u + 2*u*(cos(t)*x-sin(t)*y) + cos(t)*cos(t)*(x*x-y*y) - 2*sin(t)*cos(t)*x*y + w*w + 2*w*z + y*y + z*z);
-            H(1,3) = -2/fov * (cos(t)*x-sin(t)*y+u) / (w*w + 2*w*z + cos(t)*cos(t)*(x*x-y*y) - 2*(sin(t)*y-u)*cos(t)*x - 2*sin(t)*u*y + u*u + y*y + z*z);
-            H(1,4) = -2/fov * (cos(t)*y+sin(t)*x)*(w+z) / (cos(t)*cos(t)*(x*x-y*y) - 2*(sin(t)*y-u)*cos(t)*x - 2*sin(t)*u*y + u*u + w*w + 2*w*z + y*y + z*z);
+            H(1,1) = 2/fov * (cos(t)*y+sin(t)*x+v) / (u*u + 2*u*(cos(t)*x-sin(t)*y) + 2*cos(t)*v*y + 2*sin(t)*v*x + v*v + x*x + y*y);
+            H(1,2) = -2/fov * (cos(t)*x-sin(t)*y+u) / (v*v + 2*v*(cos(t)*y+sin(t)*x) + 2*cos(t)*u*x - 2*sin(t)*u*y + u*u + x*x + y*y);
+            H(1,4) = -2/fov * (cos(t)*cos(t)*(x*x+y*y) + cos(t)*(u*x+v*y) + sin(t)*(sin(t)*(x*x+y*y)-u*y+v*x)) / (2*cos(t)*(u*x+v*y) - 2*sin(t)*(u*y-v*x) + u*u + v*v + x*x + y*y);
             
-            H(2,2) = 2/fov * (w+z) / (v*v + 2*v*(cos(t)*y+sin(t)*x) - cos(t)*cos(t)*(x*x-y*y) + 2*sin(t)*cos(t)*x*y + w*w + 2*w*z + x*x + z*z);
-            H(2,3) = -2/fov * (cos(t)*y+sin(t)*x+v) / (w*w + 2*w*z - cos(t)*cos(t)*(x*x-y*y) + 2*(sin(t)*x+v)*cos(t)*y + 2*sin(t)*v*x + v*v + x*x + z*z);
-            H(2,4) = -2/fov * (cos(t)*x-sin(t)*y)*(w+z) / (cos(t)*cos(t)*(x*x-y*y) - 2*(sin(t)*x+v)*cos(t)*y - 2*sin(t)*v*x - v*v - w*w - 2*w*z - x*x - z*z);
+            
+            H(2,2) = -2/fov * (w+z) / (v*v + 2*v*(cos(t)*y+sin(t)*x) - cos(t)*cos(t)*(x*x-y*y) + 2*sin(t)*cos(t)*x*y + w*w + 2*w*z + x*x + z*z);
+            H(2,3) = 2/fov * (cos(t)*y+sin(t)*x+v) / (w*w + 2*w*z - cos(t)*cos(t)*(x*x-y*y) + 2*(sin(t)*x+v)*cos(t)*y + 2*sin(t)*v*x + v*v + x*x + z*z);
+            H(2,4) = 2/fov * (cos(t)*x-sin(t)*y)*(w+z) / (cos(t)*cos(t)*(x*x-y*y) - 2*(sin(t)*x+v)*cos(t)*y - 2*sin(t)*v*x - v*v - w*w - 2*w*z - x*x - z*z);
         end
         
     end

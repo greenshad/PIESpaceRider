@@ -13,7 +13,8 @@ plot(fig.fig.Children(1),sat.crnPos(:,1), sat.crnPos(:,2))
 plot(fig.fig.Children(1),sat.crnPos(:,1), sat.crnPos(:,2),'.')
 plot(fig.fig.Children(1),sat.crnPos(:,1), sat.crnPos(:,2),'.')
 try
-    plot(fig.fig.Children(1),ekf.ekfX(1), ekf.ekfX(2),'+')
+    plot(fig.fig.Children(1),ekf.ekfX(1) + cam.camPos(1), ekf.ekfX(2) + cam.camPos(2),'+')
+%     plot(fig.fig.Children(1),ekf.ekfX(1), ekf.ekfX(2),'+')
 catch
     warning('No estmation to plot from ekf !');
 end
