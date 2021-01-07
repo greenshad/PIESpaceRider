@@ -10,8 +10,8 @@ ekf = EKF(sat);
 
 fig = initGraphics(sat,cam,mes,ekf);
 
-mes.setVariance(0.01,0.01,0.01);
-% mes.setVariance(0.0,0.0,0.0);
+% mes.setVariance(0.01,0.01,0.01);
+mes.setVariance(0.0,0.0,0.0);
 sat.setSatPos([0,10,0]);
 sat.setSatAngle(0);
 draw(sat,cam,fig,mes)
@@ -23,14 +23,14 @@ sat.setSatAngle(0);
 cam.setCamPos([0, 0, 0]);
 cam.setCamAngle(0);
 
-initPosSig = 5;
+initPosSig = 0.001;
 X0 = [sat.satPos - cam.camPos, sat.satTheta - cam.camTheta]'+normrnd(0,initPosSig,4,1);
 P0 = initPosSig*eye(size(X0,1));
-Q = 1*eye(4);
+Q = 1000*eye(4);
 R = 0.01*eye(2);
 ekf.setEkfParam(X0,P0,Q,R);
 
-niterations = 5000;
+niterations = 2000;
 
 Xreal = zeros(4,niterations);
 Xest = zeros(4,niterations);
@@ -40,7 +40,7 @@ for i=1:niterations
     sat.changeSatSpeed([0.2*cos(i/60), 0.2*cos(i/70), 0.05*cos(i/80)]);
     sat.changeSatOmega(3.14/30*cos(i/50));
     cam.changeCamSpeed([0.5*cos(i/20), 1*cos(i/30), 0]);
-%     cam.changeCamOmega(3.14/25*cos(i/10));        %x drifting for some reason when uncommented
+    cam.changeCamOmega(3.14/360*cos(i/100));        % x drifting for some reason when uncommented
     sat.updateSatPos(dt);
     cam.updateCamPos(dt);
     mes.getMeasurements(sat,cam);
@@ -57,4 +57,5 @@ for i=1:niterations
     end
 end 
 
-plotError(Xreal, Xest,P);
+
+plotError(Xreal, Xest,P,0);

@@ -53,7 +53,8 @@ classdef EKF < handle
             
             map = [[0,0,0] ; sat.lmkRelPos]';               %add the center of the satellite as a lmk
             u = [sat.satSpeed - cam.camSpeed, sat.satOmega - cam.camOmega];
-            z = [mes.measSatPos; mes.measLmkPos]';
+%             u = [sat.satSpeed - cam.camSpeed, sat.satOmega];
+            z = [mes.measSatPos; mes.measLmkPos]';          % add the measurement of the center to the measurements
             
             %PREDICTION
             X = obj.f(X,u,dt);
@@ -66,18 +67,18 @@ classdef EKF < handle
             
             
 %           correction using landmarks position
-            for i=1:size(z,2)
-                zi = z(:,i);
-                mi = map(:,i);
-                H = obj.computeH(X,mi,cam.fov);
-                
-                y = zi - obj.h(X,mi,cam.fov);
-                S = H*Pn1*H' + R;
-                K = Pn1*H'/S;
-                X = X + K*y;
-                X(4) = mod(X(4)+pi,2*pi)-pi;
-                Pn1 = (eye(size(Pn1))-K*H)*Pn1;
-            end
+%             for i=1:size(z,2)
+%                 zi = z(:,i);
+%                 mi = map(:,i);
+%                 H = obj.computeH(X,mi,cam.fov);
+%                 
+%                 y = zi - obj.h(X,mi,cam.fov);
+%                 S = H*Pn1*H' + R;
+%                 K = Pn1*H'/S;
+%                 X = X + K*y;
+%                 X(4) = mod(X(4)+pi,2*pi)-pi;
+%                 Pn1 = (eye(size(Pn1))-K*H)*Pn1;
+%             end
             
             %UPDATE
             obj.ekfX = X;
