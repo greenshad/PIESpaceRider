@@ -43,6 +43,9 @@ classdef measurement < handle
 
             % measure landmark positions
             satLandmarkFramePos = zeros(size(sat.lmkN,1),2);
+            if sat.lmkN == 0
+                satLandmarkFramePos = [];
+            end
             pntLen = 1+i;
             for i=1:sat.lmkN
                 satLandmarkFramePos(i,:) = cam.getPointPosInFrame(sat.lmkPos(i,:)) + normrnd(0,obj.simVarLmk,[1,2]);

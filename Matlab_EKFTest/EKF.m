@@ -57,6 +57,7 @@ classdef EKF < handle
             
             %PREDICTION
             X = obj.f(X,u,dt);
+            X(4) = mod(X(4)+pi,2*pi)-pi;
             
             F = obj.computeF(X,u,dt);
             Pn1 = F*Pn*F' + Q;
@@ -64,7 +65,7 @@ classdef EKF < handle
             %CORRECTION
             
             
-            % correction using landmarks position
+%           correction using landmarks position
             for i=1:size(z,2)
                 zi = z(:,i);
                 mi = map(:,i);
@@ -74,6 +75,7 @@ classdef EKF < handle
                 S = H*Pn1*H' + R;
                 K = Pn1*H'/S;
                 X = X + K*y;
+                X(4) = mod(X(4)+pi,2*pi)-pi;
                 Pn1 = (eye(size(Pn1))-K*H)*Pn1;
             end
             

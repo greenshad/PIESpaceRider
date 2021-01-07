@@ -1,7 +1,7 @@
 close all
 clear
 
-lmkN = 8;
+lmkN = 20;
 
 cam = camera();
 sat = satellite(lmkN);
@@ -23,29 +23,38 @@ sat.setSatAngle(0);
 cam.setCamPos([0, 0, 0]);
 cam.setCamAngle(0);
 
-X0 = [0,0,0]';
-P0 = 25*eye(size(X0,1));
-Q = 0.001*eye(4);
-R = 0.1*eye(2);
+initPosSig = 5;
+X0 = [sat.satPos - cam.camPos, sat.satTheta - cam.camTheta]'+normrnd(0,initPosSig,4,1);
+P0 = initPosSig*eye(size(X0,1));
+Q = 1*eye(4);
+R = 0.01*eye(2);
 ekf.setEkfParam(X0,P0,Q,R);
 
-Xreal = zeros(4,400);
-Xest = zeros(4,100);
+niterations = 5000;
+
+Xreal = zeros(4,niterations);
+Xest = zeros(4,niterations);
+P = zeros(4,niterations);
     
-for i=1:1000
+for i=1:niterations
     sat.changeSatSpeed([0.2*cos(i/60), 0.2*cos(i/70), 0.05*cos(i/80)]);
     sat.changeSatOmega(3.14/30*cos(i/50));
     cam.changeCamSpeed([0.5*cos(i/20), 1*cos(i/30), 0]);
-    cam.changeCamOmega(3.14/25*cos(i/10));
+%     cam.changeCamOmega(3.14/25*cos(i/10));        %x drifting for some reason when uncommented
     sat.updateSatPos(dt);
     cam.updateCamPos(dt);
     mes.getMeasurements(sat,cam);
     ekf.stepEKF(sat,cam,mes,dt);
-    draw(sat,cam,fig,mes,ekf);
+    if rem(i,20) == 0
+        draw(sat,cam,fig,mes,ekf);
+    end
     Xreal(:,i) = [sat.satPos, sat.satTheta];
     try
         Xest(:,i) = ekf.ekfX + [cam.camPos, cam.camTheta]';
+        for j=1:4
+            P(j,i) = ekf.ekfP(j,j);
+        end
     end
 end 
 
-plotError(Xreal, Xest);
+plotError(Xreal, Xest,P);

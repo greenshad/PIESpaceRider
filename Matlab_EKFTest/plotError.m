@@ -1,4 +1,4 @@
-function plotError(Xreal, Xest)
+function plotError(Xreal, Xest,P)
 fig = figure("name", "Error plot",'NumberTitle','off');
 set(fig,'WindowStyle','docked')
 
@@ -14,6 +14,8 @@ fig.Children(4).YLabel.String = 'xSat';
 hold on
 plot(Xreal(1,:))
 plot(Xest(1,:))
+plot(1:size(P,2), Xest(1,:) + sqrt(P(1,:)),'g')
+plot(1:size(P,2), Xest(1,:) - sqrt(P(1,:)),'g')
 legend('real', 'est')
 hold off
 
@@ -24,6 +26,8 @@ fig.Children(3).YLabel.String = 'ySat';
 hold on
 plot(Xreal(2,:))
 plot(Xest(2,:))
+plot(1:size(P,2), Xest(2,:) + sqrt(P(2,:)),'g')
+plot(1:size(P,2), Xest(2,:) - sqrt(P(2,:)),'g')
 legend('real', 'est')
 hold off
 
@@ -34,6 +38,8 @@ fig.Children(2).YLabel.String = 'zSat';
 hold on
 plot(Xreal(3,:))
 plot(Xest(3,:))
+plot(1:size(P,2), Xest(3,:) + sqrt(P(3,:)),'g')
+plot(1:size(P,2), Xest(3,:) - sqrt(P(3,:)),'g')
 legend('real', 'est')
 hold off
 
@@ -44,6 +50,8 @@ fig.Children(1).YLabel.String = 'thetaSat';
 hold on
 plot(Xreal(4,:))
 plot(Xest(4,:))
+plot(1:size(P,2), Xest(4,:) + sqrt(P(4,:)),'g')
+plot(1:size(P,2), Xest(4,:) - sqrt(P(4,:)),'g')
 legend('real', 'est')
 hold off
 end
