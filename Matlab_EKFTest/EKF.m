@@ -20,19 +20,19 @@ classdef EKF < handle
         function obj = EKF(sat)
             obj.ekfMapsize = sat.lmkN + 5;  %lmkN + frame + center         
             obj.ekfX = zeros(4,1);  %3 relative position, 1 relative angle       
-            obj.ekfP = zeros(4);            
-            obj.ekfQ = zeros(2,2);              
+            obj.ekfP = zeros(4);
+            obj.ekfQ = zeros(2,2);
             obj.ekfS = zeros(2,2);
-            obj.ekfF = 1;              
+            obj.ekfF = 1;
             obj.ekfH = 1;
         end
         
         % sets the EKF parameters
         function obj = setEkfParam(obj,InitX,InitP,Q,R)
-            obj.ekfX = InitX;         
-            obj.ekfP = InitP;              
-            obj.ekfQ = Q;              
-            obj.ekfR = R; 
+            obj.ekfX = InitX;
+            obj.ekfP = InitP;
+            obj.ekfQ = Q;
+            obj.ekfR = R;
         end
         
         % gets the EKF parameters
@@ -53,7 +53,6 @@ classdef EKF < handle
             
             map = [[0,0,0] ; sat.lmkRelPos]';               %add the center of the satellite as a lmk
             u = [sat.satSpeed - cam.camSpeed, sat.satOmega - cam.camOmega];
-%             u = [sat.satSpeed - cam.camSpeed, sat.satOmega];
             z = [mes.measSatPos; mes.measLmkPos]';          % add the measurement of the center to the measurements
             
             %PREDICTION
@@ -65,20 +64,21 @@ classdef EKF < handle
             
             %CORRECTION
             
-            
 %           correction using landmarks position
-%             for i=1:size(z,2)
-%                 zi = z(:,i);
-%                 mi = map(:,i);
-%                 H = obj.computeH(X,mi,cam.fov);
-%                 
-%                 y = zi - obj.h(X,mi,cam.fov);
-%                 S = H*Pn1*H' + R;
-%                 K = Pn1*H'/S;
-%                 X = X + K*y;
-%                 X(4) = mod(X(4)+pi,2*pi)-pi;
-%                 Pn1 = (eye(size(Pn1))-K*H)*Pn1;
-%             end
+            for i=1:size(z,2)
+                % find which landmark we're watching
+%                 qsdqRsdqsd
+                zi = z(:,i);
+                mi = map(:,i);
+                H = obj.computeH(X,mi,cam.fov);
+                
+                y = zi - obj.h(X,mi,cam.fov);
+                S = H*Pn1*H' + R;
+                K = Pn1*H'/S;
+                X = X + K*y;
+                X(4) = mod(X(4)+pi,2*pi)-pi;
+                Pn1 = (eye(size(Pn1))-K*H)*Pn1;
+            end
             
             %UPDATE
             obj.ekfX = X;

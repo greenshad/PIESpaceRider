@@ -56,7 +56,7 @@ classdef measurement < handle
         
         % sets the measurements error, uses the deviation: sqrt(Var)
         function obj = setVariance(obj,VarSat,VarCrn,VarLmk)
-            obj.simVarSat = VarSat;           
+            obj.simVarSat = VarSat;
             obj.simVarCrn = VarCrn;
             obj.simVarLmk = VarLmk;
         end
