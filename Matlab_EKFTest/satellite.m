@@ -1,6 +1,6 @@
-% Satellite class, basically a square of dimension 1 that can move in 3d
+% Satellite class, a square of dimension 1 that can move in 3d
 % but can only rotate around the z axis. It has a certain number of
-% landmarks on itself, randomly generated.
+% landmarks, randomly generated.
 classdef satellite < handle
     properties
         satPos
@@ -81,7 +81,7 @@ classdef satellite < handle
             obj.satOmega = omega;
         end
         
-        function obj = updateSatPosition(obj, dt)
+        function obj = updateSatPos(obj, dt)
             obj.rotateSat(obj.satOmega*dt/2);
             obj.translateSat(obj.satSpeed*dt);
             obj.rotateSat(obj.satOmega*dt/2);

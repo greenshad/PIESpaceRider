@@ -1,58 +1,60 @@
 close all
 clear
 
-lmkN = 5;
+lmkN = 2;
 
 cam = camera();
 sat = satellite(lmkN);
 mes = measurement();
-fig = initGraphics(sat,cam,mes);
+ekf = EKF(sat);
 
+fig = initGraphics(sat,cam,mes,ekf);
 
-% for i=1:100
-%     cam.translateCam([0,0.1,0]);
-%     draw(sat,cam,fig)
-% end
-% 
-% cam.setCamPos([0,0,0]);
-% draw(sat,cam,fig)
-% cam.setCamAngle(0);
-% draw(sat,cam,fig)
-% 
-% for i=1:150
-%     cam.rotateCam(0.05);
-%     draw(sat,cam,fig)
-% end 
-% 
-% cam.setCamPos([0,0,0]);
-% cam.setCamAngle(0);
-% draw(sat,cam,fig)
-% 
-% for i=1:120
-%     sat.rotateSat(0.05);
-%     draw(sat,cam,fig)
-% end 
-% 
-% sat.setSatAngle(0);
-% draw(sat,cam,fig)
-% 
-% for i=1:100
-%     sat.translateSat([0,-0.11,0]);
-%     draw(sat,cam,fig)
-% end 
-
-mes.setVariance(0.01,0.01,0.01)
+mes.setVariance(0.02,0.02,0.02);
+% mes.setVariance(0.0,0.0,0.0);
 sat.setSatPos([0,10,0]);
 sat.setSatAngle(0);
 draw(sat,cam,fig,mes)
 
 
-for i=1:400
-    sat.setSatPos([0,10,0] + [2*sin(i/60), 3*sin(i/70), 1*sin(i/80)]);
-    sat.setSatAngle(3.14/3*sin(i/50));
-    cam.setCamPos([0.5*sin(i/20), 1*sin(i/30), 0]);
-    cam.setCamAngle(3.14/25*sin(i/10));
-    mes.getMeasurements(sat,cam)
-    draw(sat,cam,fig,mes)
-    %pause(0.1)
-end 
+dt = 0.001;
+sat.setSatPos([0,10,0]);
+sat.setSatAngle(0);
+cam.setCamPos([0, 0, 0]);
+cam.setCamAngle(0);
+
+initPosSig = 0.001;
+X0 = [sat.satPos - cam.camPos, sat.satTheta - cam.camTheta]'+normrnd(0,initPosSig,4,1);
+P0 = initPosSig*eye(size(X0,1));
+Q = 0.01*eye(4);
+R = 0.04*eye(2);
+ekf.setEkfParam(X0,P0,Q,R);
+
+niterations = 4000;
+
+Xreal = zeros(4,niterations);
+Xest = zeros(4,niterations);
+P = zeros(4,niterations);
+
+for i=1:niterations
+    sat.changeSatSpeed([0.2*cos(i/60), 0.2*cos(i/70), 0.05*cos(i/80)]);
+    sat.changeSatOmega(3.14/100*cos(i/50));
+    cam.changeCamSpeed([0.5*cos(i/20), 1*cos(i/30), 0]);
+%     cam.changeCamOmega(-3.14/100*cos(i/50));        % x drifting for some reason when uncommented
+    sat.updateSatPos(dt);
+    cam.updateCamPos(dt);
+    mes.getMeasurements(sat,cam);
+    ekf.stepEKF(sat,cam,mes,dt);
+    if rem(i,20) == 0
+        draw(sat,cam,fig,mes,ekf);
+    end
+    Xreal(:,i) = [sat.satPos, sat.satTheta];
+    try
+        Xest(:,i) = ekf.ekfX + [cam.camPos, cam.camTheta]';
+        for j=1:4
+            P(j,i) = ekf.ekfP(j,j);
+        end
+    end
+end
+
+plotError(Xreal, Xest,P,0);

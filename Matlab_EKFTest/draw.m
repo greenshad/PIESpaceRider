@@ -1,4 +1,4 @@
-function draw(sat,cam,fig,mes)
+function draw(sat,cam,fig,mes,ekf)
 
 % relative position
 fig.fig.CurrentAxes = fig.fig.Children(1);
@@ -12,14 +12,20 @@ plot(fig.fig.Children(1),sat.satPos(1), sat.satPos(2),'.')
 plot(fig.fig.Children(1),sat.crnPos(:,1), sat.crnPos(:,2))
 plot(fig.fig.Children(1),sat.crnPos(:,1), sat.crnPos(:,2),'.')
 plot(fig.fig.Children(1),sat.crnPos(:,1), sat.crnPos(:,2),'.')
+try
+    plot(fig.fig.Children(1),ekf.ekfX(1) + cam.camPos(1), ekf.ekfX(2) + cam.camPos(2),'+')
+%     plot(fig.fig.Children(1),ekf.ekfX(1), ekf.ekfX(2),'+')
+catch
+    warning('No estmation to plot from ekf !');
+end
 hold off
+drawnow
 
 
 % camera frame
 fig.fig.CurrentAxes = fig.fig.Children(2);
 cla
 hold on
-drawnow
 
 % plot Sat center
 satFramePos = cam.getPointPosInFrame(sat.satPos);
@@ -39,10 +45,19 @@ for i=1:sat.lmkN
     plot(fig.fig.Children(2),satLandmarkFramePos(1), satLandmarkFramePos(2),'.')
 end
 
+% draw measured data
 plot(fig.fig.Children(2),mes.measSatPos(:,1),mes.measSatPos(:,2),'g+')
-plot(fig.fig.Children(2),mes.measCrnPos(:,1),mes.measCrnPos(:,2),'g')
-plot(fig.fig.Children(2),mes.measLmkPos(:,1),mes.measLmkPos(:,2),'g.')
 
+measCrnPosList = zeros(size(mes.measCrnPos,1)+1,2);
+for i=1:size(mes.measCrnPos,1)
+    measCrnPosList(i,:) = mes.measCrnPos(i,:);
+end
+measCrnPosList(size(mes.measCrnPos,1)+1,:) = measCrnPosList(1,:);
+plot(fig.fig.Children(2),measCrnPosList(:,1),measCrnPosList(:,2),'g')
+
+try
+    plot(fig.fig.Children(2),mes.measLmkPos(:,1),mes.measLmkPos(:,2),'g.')
+catch
 
 hold off
 drawnow
