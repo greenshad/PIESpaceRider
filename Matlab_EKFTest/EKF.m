@@ -96,9 +96,7 @@ classdef EKF < handle
         function F = computeF(obj,X,u,dt)
            F = zeros(size(X,1));
            F(1,1) = 1;
-           F(1,4) = -u(1)*dt*sin(u(4)*dt/2) - u(2)*dt*cos(u(4)*dt/2);
            F(2,2) = 1;
-           F(2,4) = -u(2)*dt*sin(u(4)*dt/2) + u(1)*dt*cos(u(4)*dt/2);
            F(3,3) = 1;
            F(4,4) = 1;
         end
