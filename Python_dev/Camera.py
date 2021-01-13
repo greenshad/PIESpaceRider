@@ -1,22 +1,22 @@
-# create the camera object. It can move in 3d but can only rotate around
-# the z axis. Its field of view can be modified
+# create the camera object. It can move in 3d and rotate in 3d. Its field of view can be modified
+
 import numpy as np
 
 
 class Camera:
     def __init__(self):
-        self.camPos = np.array([0, 0, 0])
-        self.camTheta = 0 * 3.14 / 180
-        self.fov = 40 * 3.14 / 180
-        self.foc = 0.5 / tan(self.fov / 2)
+        self.camPos = np.array([0, 0, 0])  # camera position
+        self.camAng = np.array([0, 0, 0])  # camera angle
+        self.fov = 40 * 3.14 / 180  # camera field of view
+        self.foc = 0.5 / tan(self.fov / 2)  # camera focal distance
         self.camSight = self.camPos + np.array([[0, 0, 0], [0, self.foc, 0]])
-        self.camSight = rotate(self.camSight, 'z_rotate', self.camTheta, self.camPos)
+        self.camSight = rotate(self.camSight, self.camAng, self.camPos)
         self.camLogo = self.camPos + np.array([[0, 0, 0],
-                                               ...[- self.foc * sin(self.fov / 2), self.foc, 0],
-                                               ...[+ self.foc * sin(self.fov / 2), self.foc, 0],
-                                               ...[0, 0, 0]])
-        self.camSpeed = [0, 0, 0]
-        self.camOmega = 0
+                                        ...[- self.foc * sin(self.fov / 2), self.foc, - self.foc * sin(self.fov / 2)],
+                                        ...[+ self.foc * sin(self.fov / 2), self.foc, + self.foc * sin(self.fov / 2)],
+                                        ...[0, 0, 0]])
+        self.camSpeed = np.array([0, 0, 0])
+        self.camOmega = np.array([0, 0, 0])
 
     def translate_cam(self, vector):
         self.camPos = self.camPos + vector
@@ -30,16 +30,16 @@ class Camera:
         self.camPos = vector
         return self
 
-    def rotate_cam(self, theta):
-        self.camSight = rotate(self.camSight, 'z_rotate', theta, self.camPos)
-        self.camLogo = rotate(self.camLogo, 'z_rotate', theta, self.camPos)
-        self.camTheta = self.camTheta + theta
+    def rotate_cam(self, cam_ang):
+        self.camSight = rotate(self.camSight, cam_ang, self.camPos)
+        self.camLogo = rotate(self.camLogo, cam_ang, self.camPos)
+        self.camAng = self.camAng + cam_ang
         return self
 
-    def set_cam_angle(self, theta):
-        self.camSight = rotate(self.camSight, 'z_rotate', theta - self.camTheta, self.camPos)
-        self.camLogo = rotate(self.camLogo, 'z_rotate', theta - self.camTheta, self.camPos)
-        self.camTheta = theta
+    def set_cam_angle(self, cam_ang):
+        self.camSight = rotate(self.camSight, cam_ang - self.camAng, self.camPos)
+        self.camLogo = rotate(self.camLogo, cam_ang - self.camAng, self.camPos)
+        self.camAng = cam_ang,
         return self
 
     def change_cam_speed(self, vector):
@@ -65,7 +65,7 @@ class Camera:
         return self
 
     def get_point_pos_in_frame(self, abs_pos):
-        rel_pos = rotate(abs_pos, 'z_rotate', -self.camTheta, self.camPos) - self.camPos
+        rel_pos = rotate(abs_pos, -self.camAng, self.camPos) - self.camPos
         relative_angle = np.array([[atan(relPos(1) / relPos(2))],
                                    ...[atan(relPos(3) / relPos(2))]])
         frame_pos = relative_angle * 2 / obj.fov
