@@ -5,9 +5,7 @@ Created on Tue Jan 12 17:08:42 2021
 @author: Vincent
 """
 
-from EKF import stepEKF
-from camera import *
-from satellite import *
+import numpy as np
 
 # parameters definition :
 # X = [rho, theta, phi, alpha, beta, gamma,
