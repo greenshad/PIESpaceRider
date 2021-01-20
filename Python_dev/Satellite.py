@@ -7,8 +7,8 @@ import random
 
 
 class Satellite:
-    def __init__(self, lmkn):
-        self.lmkN = lmkn
+    def __init__(self, landmark):
+        self.lmkN = landmark
         self.satPos = np.array([0, 10, 0])  # x, y, z position of the center
         self.satAng = [0, 0, 0]  # the = rotation around z axis
         self.satSpeed = [0, 0, 0]
