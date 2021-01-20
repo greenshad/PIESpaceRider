@@ -66,8 +66,8 @@ class Camera:
 
     def get_point_pos_in_frame(self, abs_pos):  # gets point in camera frame from absolute frame
         rel_pos = rotate(abs_pos, -self.camAng, self.camPos) - self.camPos
-        relative_angle = np.array([[atan(relPos(1) / relPos(2))],
-                                   ...[atan(relPos(3) / relPos(2))]])
+        relative_angle = np.array([[np.atan(relPos(1) / relPos(2))],
+                                   ...[np.atan(relPos(3) / relPos(2))]])
         frame_pos = relative_angle * 2 / obj.fov
         if max(abs(frame_pos)) > 1 or rel_pos(2) < 0:
             frame_pos = [np.nan, np.nan]
