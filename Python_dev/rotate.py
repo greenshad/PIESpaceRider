@@ -7,7 +7,7 @@ import numpy as np
 
 def rotate(s, rotAng, origin):
     try:
-        rotvec = R.from_euler('zyx', rotAng, degrees=True)
+        rotvec = R.from_euler('zyx', rotAng, degrees=False)
         if np.size(s) > 3:
             origin = np.tile(origin, (np.size(s, 0), 1))
         s = rotvec.apply(np.array(s)-origin) + origin
