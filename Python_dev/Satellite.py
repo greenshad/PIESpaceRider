@@ -4,6 +4,7 @@
 
 import numpy as np
 import random
+import itertools
 
 
 class Satellite:
@@ -14,10 +15,7 @@ class Satellite:
         self.satSpeed = [0, 0, 0]
         self.satOmega = 0
 
-        self.crnRelPos = np.array([-1, 0, -1],
-                                  [- 1, 0, 1],
-                                  [1, 0, 1],
-                                  [1, 0, -1])
+        self.crnRelPos = np.array(list(itertools.product(*zip([1,1,1],[-1,-1,-1]))))
         self.crnPos = self.satPos + self.crnRelPos
         self.crnPos = rotate(self.crnPos, self.satAng, self.satPos)
 
@@ -75,3 +73,4 @@ class Satellite:
         self.translateSat(self.satSpeed*dt)
         self.rotateSat(self.satOmega*dt/2)
         return self
+
