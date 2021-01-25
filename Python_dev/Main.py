@@ -14,7 +14,7 @@ import measurement
 # parameters definition :
 # X = [rho, theta, phi, alpha, beta, gamma,
 #      rho_p, theta_p, phi_p, alpha_p, beta_p, gamma_p]
-# u = [rho_pp, theta_pp, phi_pp]
+# u = [ax, ay, az, gx, gy, gz] -> accelerations in cam referential
 # map = [mi], mi = [xi, yi, zi]
 # z = [zi], zi = [lmkID, [xFramei, yFramei]]
 
@@ -37,6 +37,19 @@ for i in range(nit):
     # vec = rotate.rotate(np.array(list(itertools.product(*zip([1, 1, 1],[-1, -1, -1])))), [0, i/10, i/10], np.array([0, 0, 2]))
     # graph.update_draw(vec, 0)
     #sat.rotate_sat([i/1000, np.sin(i/1000), -i/1000])
+    
+    # u = cam.commandCam(X)
+    # v = sat.commandSat()
+    
+    # cam.updateCamPosition(u,dt)
+    # sat.updateSatPosition(v,dt)
+    
+    # z = createZOutput(cam.getX(), sat.getX(),carte,R)
+    # YOLOOutput,R = createYOLOOutput(XCam, Xsat,carte,R)
+    # z = convertYolo2EKF(YOLOOutput,camParameter)
+    # [X, P] = stepEKF(u,X,P,Q,R,z,dt,carte,fov)
+    
+    draw(cam.getX(),sat.getX(),X,z,carte)
 
     cam.set_cam_omega([-np.sin(dt*0.5), np.sin(dt*0.1), np.sin(dt*0.2)])
     sat.set_sat_omega([1, 1, 1])
