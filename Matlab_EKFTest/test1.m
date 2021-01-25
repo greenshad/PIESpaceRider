@@ -1,7 +1,7 @@
 close all
 clear
 
-lmkN = 2;
+lmkN = 20;
 
 cam = camera();
 sat = satellite(lmkN);
@@ -23,10 +23,10 @@ sat.setSatAngle(0);
 cam.setCamPos([0, 0, 0]);
 cam.setCamAngle(0);
 
-initPosSig = 0.001;
+initPosSig = 0.1;
 X0 = [sat.satPos - cam.camPos, sat.satTheta - cam.camTheta]'+normrnd(0,initPosSig,4,1);
 P0 = initPosSig*eye(size(X0,1));
-Q = 0.01*eye(4);
+Q = 10000*eye(4);
 R = 0.04*eye(2);
 ekf.setEkfParam(X0,P0,Q,R);
 
@@ -38,7 +38,8 @@ P = zeros(4,niterations);
 
 for i=1:niterations
     sat.changeSatSpeed([0.2*cos(i/60), 0.2*cos(i/70), 0.05*cos(i/80)]);
-    sat.changeSatOmega(3.14/100*cos(i/50));
+%     sat.changeSatOmega(3.14/100*cos(i/50));
+    sat.setSatOmega(3.14);
     cam.changeCamSpeed([0.5*cos(i/20), 1*cos(i/30), 0]);
 %     cam.changeCamOmega(-3.14/100*cos(i/50));        % x drifting for some reason when uncommented
     sat.updateSatPos(dt);

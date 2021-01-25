@@ -10,7 +10,7 @@ import numpy as np
 # parameters definition :
 # X = [rho, theta, phi, alpha, beta, gamma,
 #      rho_p, theta_p, phi_p, alpha_p, beta_p, gamma_p]
-# u = [rho_pp, theta_pp, phi_pp]
+# u = [ax, ay, az, gx, gy, gz] -> accelerations in cam referential
 # map = [mi], mi = [xi, yi, zi]
 # z = [zi], zi = [lmkID, [xFramei, yFramei]]
 
@@ -42,8 +42,8 @@ for i in range(nit):
     u = cam.commandCam(X)
     v = sat.commandSat()
     
-    cam.updateCamPosition(u)
-    cam.updateSatPosition(v)
+    cam.updateCamPosition(u,dt)
+    sat.updateSatPosition(v,dt)
     
     z = createZOutput(cam.getX(), sat.getX(),carte,R)
     # YOLOOutput,R = createYOLOOutput(XCam, Xsat,carte,R)
