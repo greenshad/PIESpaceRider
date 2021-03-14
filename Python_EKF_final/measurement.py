@@ -53,14 +53,14 @@ def read_yolo(input_type, number, path):
         mes_real = np.load(path)                                # loading
         mes_real_conf = mes_real[:, 3]                          # extract uncertainty values
         mes_real_conf = mes_real_conf[mes_real_conf != 0]       # delete zeros
-        mes_real_coeff = 0.01 * pow(mes_real_conf + 0.001, -30) # linear function, maps 1 to 0.01 and 0.7 to 444
+        mes_real_coeff = 0.01 * pow(mes_real_conf + 0.001, -20) # linear function, maps 1 to 0.01 and 0.7 to 44
 
     # if the file could not be read, try again
     except:
         time.sleep(0.01)
         print('Reading of data failed. Trying again.')
         mes_last, mes_real_coeff = read_yolo(input_type, number, path)
-        return mes_last
+        return mes_last, mes_real_coeff
 
     # Transformations to match the coordinate system used in this algorithm
     pos = np.where(mes_real == -1)
@@ -86,7 +86,7 @@ def read_yolo(input_type, number, path):
     else:
         print('No YOLO input type specified')
         mes_last = np.array([])
-        return mes_last
+        return mes_last, mes_real_coeff
     # sort the vector
     mes_last = mes_last[mes_last[:, 0].argsort()]
     mes_last = mes_last[mes_last[:, 0] != 6., :]  # deletes the satellite landmark, as it introduces mostly noise

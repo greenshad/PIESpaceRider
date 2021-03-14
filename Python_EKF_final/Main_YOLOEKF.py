@@ -45,7 +45,7 @@ import time
 path = 'C:/Users/Phili/Studium/Studium/SUPAERO/PIE/YOLO/tensorflow-yolov4-tflite-master/yolov4_result.npy'
 dt = 0.1                            # Time step
 nit = 200                           # Number of maximum iterations
-mode = 'video'                      # input modes are: 'live', 'video' or 'simulation'
+mode = 'simulation'                      # input modes are: 'live', 'video' or 'simulation'
 draw_steps = 2                      # Show the plot every X step. This slows down the calculation a lot if small numbers
                                     # are selected.
 
@@ -64,7 +64,7 @@ r = 0.1                         # measurement noise covariance from the YOLOv4 u
 # set initial values for the EKF state vector
 X = np.concatenate([sat_ekf.satPos, sat_ekf.satAng, sat_ekf.satSpeed,
                     sat_ekf.satOmega]).astype(float)
-pnp_threshold = 10              # specifies when PNP is used additionally
+pnp_threshold = 20              # specifies when PNP is used additionally
 
 # YOLO settings
 max_sec = 10                    # max. number of seconds the program will wait for a new YOLO result
@@ -144,7 +144,7 @@ for i in range(nit):
 
         # Use the PNP output to reset the EKF position. This is not a necessary step, but it has been shown to increase
         # the EKF stability a lot.
-        if i < pnp_threshold:
+        if P[0:3,0:3].max() > pnp_threshold:
             X[0:3] = np.transpose(translation_vector)
             print('Using PNP')
     # Exception if PNP calculation fails
