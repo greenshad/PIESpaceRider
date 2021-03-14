@@ -1,5 +1,5 @@
 ######################################################################################################################
-# Study of a visual odometry chain for the localization and autonomous piloting of a maintenance UAV for the Space Rider
+# Localization of a space cobot by visual odometry
 # PIE
 # ISAE SUPAERO
 # Toulouse, 14.03.2021
@@ -51,16 +51,13 @@ def read_yolo(input_type, number, path):
     # Try reading the output specified at path. It should be formatted as a vector of: [Id, x, y, uncertainty]
     try:
         mes_real = np.load(path)                                # loading
-        mes_real_conf = mes_real[:, 3]                          # extract uncertainty values
-        mes_real_conf = mes_real_conf[mes_real_conf != 0]       # delete zeros
-        mes_real_coeff = 0.01 * pow(mes_real_conf + 0.001, -20) # linear function, maps 1 to 0.01 and 0.7 to 44
 
     # if the file could not be read, try again
     except:
         time.sleep(0.01)
         print('Reading of data failed. Trying again.')
-        mes_last, mes_real_coeff = read_yolo(input_type, number, path)
-        return mes_last, mes_real_coeff
+        mes_last = read_yolo(input_type, number, path)
+        return mes_last
 
     # Transformations to match the coordinate system used in this algorithm
     pos = np.where(mes_real == -1)
@@ -86,11 +83,11 @@ def read_yolo(input_type, number, path):
     else:
         print('No YOLO input type specified')
         mes_last = np.array([])
-        return mes_last, mes_real_coeff
+        return mes_last
     # sort the vector
     mes_last = mes_last[mes_last[:, 0].argsort()]
     mes_last = mes_last[mes_last[:, 0] != 6., :]  # deletes the satellite landmark, as it introduces mostly noise
-    return mes_last, mes_real_coeff
+    return mes_last
 
 # This function resets the file created as output from YOLOv4. Needs to be run to reset old data.
 def reset_yolo_protocol():

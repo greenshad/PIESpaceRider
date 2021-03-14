@@ -1,5 +1,5 @@
 ######################################################################################################################
-# Study of a visual odometry chain for the localization and autonomous piloting of a maintenance UAV for the Space Rider
+# Localization of a space cobot by visual odometry
 # PIE
 # ISAE SUPAERO
 # Toulouse, 14.03.2021
@@ -42,8 +42,7 @@ def stepEKF(X, P, Q, z, dt, carte, foc, r, mode):
             if mode == 'simulation':
                 R = r * np.eye(2)
             else:
-                R = r[i] * np.eye(2)
-            #R = r[i] * np.eye(2)
+                R =  r[i] * np.eye(2)
             y = zi[1:3] - hf(X1, mi, foc)
             S = H.dot(P).dot(np.transpose(H)) + R
             K = P@(np.transpose(H)@np.linalg.inv(S))

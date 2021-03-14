@@ -1,5 +1,5 @@
 ######################################################################################################################
-# Study of a visual odometry chain for the localization and autonomous piloting of a maintenance UAV for the Space Rider
+# Localization of a space cobot by visual odometry
 # PIE
 # ISAE SUPAERO
 # Toulouse, 14.03.2021
@@ -152,6 +152,8 @@ class Draw:
             plt.title('Estimated satellite angle')
 
         plt.grid(b=True, which='major', color='#666666', linestyle='-')
+        plt.xlabel('Iterations')
+        plt.ylabel('Angle [rad]')
 
         plt.legend()
 
@@ -168,6 +170,8 @@ class Draw:
             plt.title('Estimated satellite position')
 
         plt.grid(b=True, which='major', color='#666666', linestyle='-')
+        plt.xlabel('Iterations')
+        plt.ylabel('Position [arb. unit]')
         plt.tight_layout()
         plt.legend()
 

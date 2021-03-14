@@ -1,5 +1,5 @@
 #######################################################################################################################
-# Study of a visual odometry chain for the localization and autonomous piloting of a maintenance UAV for the Space Rider
+# Localization of a space cobot by visual odometry
 # PIE
 # ISAE SUPAERO
 # Toulouse, 14.03.2021
@@ -45,7 +45,7 @@ import time
 path = 'C:/Users/Phili/Studium/Studium/SUPAERO/PIE/YOLO/tensorflow-yolov4-tflite-master/yolov4_result.npy'
 dt = 0.1                            # Time step
 nit = 200                           # Number of maximum iterations
-mode = 'simulation'                      # input modes are: 'live', 'video' or 'simulation'
+mode = 'simulation'                 # input modes are: 'live', 'video' or 'simulation'
 draw_steps = 2                      # Show the plot every X step. This slows down the calculation a lot if small numbers
                                     # are selected.
 
@@ -60,11 +60,11 @@ cam = Camera.Camera()                       # create camera object
 # EKF settings
 P = 20 * np.eye(12)             # state covariance matrix
 Q = 10 * np.eye(12)             # process noise covariance
-r = 0.1                         # measurement noise covariance from the YOLOv4 uncertainty
+r = 0.01                         # measurement noise covariance from the YOLOv4 uncertainty
 # set initial values for the EKF state vector
 X = np.concatenate([sat_ekf.satPos, sat_ekf.satAng, sat_ekf.satSpeed,
                     sat_ekf.satOmega]).astype(float)
-pnp_threshold = 20              # specifies when PNP is used additionally
+pnp_threshold = 5              # specifies when PNP is used additionally
 
 # YOLO settings
 max_sec = 10                    # max. number of seconds the program will wait for a new YOLO result
@@ -72,10 +72,11 @@ max_sec = 10                    # max. number of seconds the program will wait f
 
 # Simulation settings, only applied if mode "simulation" is selected
 if mode == 'simulation':
-    sat_mes.set_sat_position([0, 1, 7], 'new')                                                  # change position
+    sat_mes.set_sat_position([0, 0, 7], 'new')                                                  # change position
     sat_mes.set_sat_orientation(tf.quat_from_euler([0, 45, 0], 'xyz', degrees=True), 'new')     # change orientation
-    sat_mes.set_sat_rot_velocity([1, 1, 1], 'new')                                              # change rot. velocity
+    sat_mes.set_sat_rot_velocity([0.1, 0.1, 0.1], 'new')                                        # change rot. velocity
     sat_mes.set_sat_trans_velocity([0.05, 0.05, 0.05], 'new')                                   # change trans. velocity
+noise = 0.01                                                                                    # simulated mes. noise
 
 print('Starting main loop...')
 
@@ -84,7 +85,7 @@ print('Starting main loop...')
 # Main loop
 
 force_stop = False
-for i in range(nit):
+for i in range(0, nit):
 
     ###################
     # Reading YOLO data
@@ -93,13 +94,14 @@ for i in range(nit):
     # is available. The maximum waiting time can be changed by the parameter max_sec.
     if mode == 'video' or mode == 'live':
 
-        z, r = mes.read_yolo(mode, i, path)              # reads data from yolo output
-
+        z = mes.read_yolo(mode, i, path)              # reads data from yolo output
         # This loop is activated if no new data is available
         cnt = 0
         while not z.size or force_stop:
             time.sleep(0.01)
-            z, r = mes.read_yolo(mode, i, path)
+            z = mes.read_yolo(mode, i, path)
+            r = z[:, 4]
+            z = z[:, 0:3]
             cnt += 1
             if cnt % 100 == 0:
                 print('End of file. Waiting for new information.', cnt/100, 's of 10s')
@@ -107,13 +109,16 @@ for i in range(nit):
                 print('Waiting period over. Exit algorithm.')
                 force_stop = True
                 break
+        r = z[:, [3]]
+        r = 0.01 * pow(r + 0.001, -20)
+        z = z[:, [0, 1, 2]]
 
         if z.size:
             sat_mes.lmkPos = z[:, 1:3]           # add measurement to sat_mes object if new data was added
         if force_stop:                           # exit main loop
             break
     elif mode == 'simulation':
-        z = mes.get_EKF_measurements(sat_mes, cam, 0.01)
+        z = mes.get_EKF_measurements(sat_mes, cam, noise)
     else:
         print('No mode selected. Exit algorithm.')                      # exit main loop
         break
@@ -144,7 +149,10 @@ for i in range(nit):
 
         # Use the PNP output to reset the EKF position. This is not a necessary step, but it has been shown to increase
         # the EKF stability a lot.
-        if P[0:3,0:3].max() > pnp_threshold:
+        # The standard setting is to use the PNP for N iterations until the threshold is reached, but by replacing the
+        # if condition  with 'P[0:3,0:3].max() > pnp_threshold:', the threshold can be used as threshold to the
+        # covariance of the EKF.
+        if i < pnp_threshold:
             X[0:3] = np.transpose(translation_vector)
             print('Using PNP')
     # Exception if PNP calculation fails
