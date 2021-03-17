@@ -44,27 +44,29 @@ import time
 
 path = 'C:/Users/Phili/Studium/Studium/SUPAERO/PIE/YOLO/tensorflow-yolov4-tflite-master/yolov4_result.npy'
 dt = 0.1                            # Time step
-nit = 200                           # Number of maximum iterations
-mode = 'simulation'                 # input modes are: 'live', 'video' or 'simulation'
-draw_steps = 2                      # Show the plot every X step. This slows down the calculation a lot if small numbers
+nit = 10000                          # Number of maximum iterations
+it_start = 200                        # start point of iterations
+mode = 'live'                       # input modes are: 'live', 'video' or 'simulation'
+draw_steps = 3                      # Show the plot every X step. This slows down the calculation a lot if small numbers
                                     # are selected.
 
 # Create objects
 graph = draw.Draw()                         # create graph object
 # simulated/measured satellite object
-sat_mes = Satellite.Satellite(landmark=2, mode=mode, scale=2)
+sat_mes = Satellite.Satellite(landmark=4, mode=mode, scale=2)
 sat_ekf = copy.deepcopy(sat_mes)            # create copy of satellite object to store EKF
 sat_pnp = copy.deepcopy(sat_mes)            # create copy of satellite object to store PNP
 cam = Camera.Camera()                       # create camera object
 
 # EKF settings
 P = 20 * np.eye(12)             # state covariance matrix
-Q = 10 * np.eye(12)             # process noise covariance
+Q = 1 * np.eye(12)             # process noise covariance
 r = 0.01                         # measurement noise covariance from the YOLOv4 uncertainty
 # set initial values for the EKF state vector
 X = np.concatenate([sat_ekf.satPos, sat_ekf.satAng, sat_ekf.satSpeed,
                     sat_ekf.satOmega]).astype(float)
-pnp_threshold = 5              # specifies when PNP is used additionally
+pnp_threshold = 50              # specifies when PNP is used additionally
+X_max = 30                      # resets X vector if it grows bigger than this value
 
 # YOLO settings
 max_sec = 10                    # max. number of seconds the program will wait for a new YOLO result
@@ -74,7 +76,7 @@ max_sec = 10                    # max. number of seconds the program will wait f
 if mode == 'simulation':
     sat_mes.set_sat_position([0, 0, 7], 'new')                                                  # change position
     sat_mes.set_sat_orientation(tf.quat_from_euler([0, 45, 0], 'xyz', degrees=True), 'new')     # change orientation
-    sat_mes.set_sat_rot_velocity([0.1, 0.1, 0.1], 'new')                                        # change rot. velocity
+    sat_mes.set_sat_rot_velocity([0.05, 0.05, 0.05], 'new')                                        # change rot. velocity
     sat_mes.set_sat_trans_velocity([0.05, 0.05, 0.05], 'new')                                   # change trans. velocity
 noise = 0.01                                                                                    # simulated mes. noise
 
@@ -85,7 +87,7 @@ print('Starting main loop...')
 # Main loop
 
 force_stop = False
-for i in range(0, nit):
+for i in range(it_start, it_start+nit):
 
     ###################
     # Reading YOLO data
@@ -100,8 +102,6 @@ for i in range(0, nit):
         while not z.size or force_stop:
             time.sleep(0.01)
             z = mes.read_yolo(mode, i, path)
-            r = z[:, 4]
-            z = z[:, 0:3]
             cnt += 1
             if cnt % 100 == 0:
                 print('End of file. Waiting for new information.', cnt/100, 's of 10s')
@@ -152,13 +152,21 @@ for i in range(0, nit):
         # The standard setting is to use the PNP for N iterations until the threshold is reached, but by replacing the
         # if condition  with 'P[0:3,0:3].max() > pnp_threshold:', the threshold can be used as threshold to the
         # covariance of the EKF.
-        if i < pnp_threshold:
+        if P.max() > pnp_threshold: #i < pnp_threshold:
             X[0:3] = np.transpose(translation_vector)
+            X[3:12] = [0,0,0,0,0,0,0,0,0]
             print('Using PNP')
+            P = 20 * np.eye(12)             # reset P so that it does not grow unbounded
+            #P = P / pnp_threshold          # reset P so that it does not grow unbounded
+        # Add PnP measurement as new marker
+        pnp_in_image = tf.get_point_pos_in_frame(cam, np.transpose(translation_vector)[0])
+        r = np.append(r, np.array([[0.01]]), axis=0)
+        z = np.append(z, [np.concatenate(([13.], pnp_in_image))], axis=0)
     # Exception if PNP calculation fails
 
     except:
         print('Not enough points for PNP')
+        sat_pnp.set_sat_position([0, 0, 10000], 'new')
 
 
     #################
@@ -172,6 +180,11 @@ for i in range(0, nit):
     # store the calculated data in the satellite object
     sat_ekf.set_sat_position(X[0:3], 'new')                                         # store position
     sat_ekf.set_sat_orientation(tf.quat_from_euler(X[3:6], 'xyz', False), 'new')    # store rotation
+    # reset of vector if values are too big
+    if X.max() > X_max or X[2] < 0:
+        X = np.zeros((1,12))[0]
+        X[2] = 2
+        print('Position reset')
 
     #############
     # Update Data
@@ -182,6 +195,7 @@ for i in range(0, nit):
         sat_mes.update_sat(dt)
     sat_ekf.update_sat(dt)
     sat_pnp.update_sat(dt)
+
 
     # Draw graph every X steps, set by 'draw_steps'
     if i % draw_steps == 0:

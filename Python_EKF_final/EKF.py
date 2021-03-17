@@ -28,8 +28,9 @@ def stepEKF(X, P, Q, z, dt, carte, foc, r, mode):
 
     # Calculation of the prediction
     X1 = f(X, dt)                                   # calculate the prediction with the function f(x)
-    F = computeF(X1, dt)                            # calculate the jacobian matrix of the function f(x)
+    F = computeF(X1, dt)                           # calculate the jacobian matrix of the function f(x)
     P = F.dot(P).dot(np.transpose(F)) + Q           # calculate the state covariance matrix
+
     
     # Correction of the position
     if np.size(z, 0) > 0:

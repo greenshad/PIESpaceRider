@@ -59,9 +59,9 @@ class Satellite:
 
     # this function creates landmarks based on reference model
     def set_up_lmk(self):
-        lmkRelPos = np.zeros((13, 3)) # relative landmark positions
+        lmkRelPos = np.zeros((14, 3)) # relative landmark positions
         self.lmkPos = np.array([])
-        self.measure_lmk = np.zeros((13, 3))        # measured landmark positions (through "measurement" function)
+        self.measure_lmk = np.zeros((14, 3))        # measured landmark positions (through "measurement" function)
         ###########################################################
         # Change this part for new landmarks of the satellite model
         # Landmarks coordinates are in the satellite frame
@@ -79,7 +79,9 @@ class Satellite:
         lmkRelPos[10] = np.array([7, 0, -2.63016])                 # AT_2
         lmkRelPos[11] = np.array([0, 7, -2.62335])                 # AT_3
         lmkRelPos[12] = np.array([-7, 0, -2.63461])                # AT_4
-        self.lmkN = 13                                             # total number of landmarks
+        lmkRelPos[13] = np.array([0, 0, 0])                        # PNP
+
+        self.lmkN = 14                                             # total number of landmarks
         return lmkRelPos
 
     # create random landmark for the simulation
